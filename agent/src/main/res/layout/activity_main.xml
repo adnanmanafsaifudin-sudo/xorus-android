@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="20dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="XORUS AGENT"
+        android:textSize="26sp"
+        android:textStyle="bold" />
+
+    <androidx.camera.view.PreviewView
+        android:id="@+id/cameraPreview"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:layout_marginTop="20dp" />
+
+    <TextView
+        android:id="@+id/cameraStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="Kamera belum aktif"
+        android:textSize="16sp" />
+
+    <Button
+        android:id="@+id/startCamera"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Mulai Kamera" />
+
+    <Button
+        android:id="@+id/stopCamera"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Matikan Kamera" />
+
+</LinearLayout>
