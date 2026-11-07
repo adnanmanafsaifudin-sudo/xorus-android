@@ -1,67 +1,75 @@
 package id.xorus.agent
 
-import android.app.Activity
-import android.os.Bundle
 import android.Manifest
+import android.app.Activity
 import android.content.pm.PackageManager
+import android.os.Bundle
 import android.widget.Button
-import android.widget.LinearLayout
 import android.widget.TextView
-import android.view.Gravity
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.Preview
+import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
+import androidx.core.content.ContextCompat
 
 class MainActivity : Activity() {
 
+    private lateinit var previewView: PreviewView
     private lateinit var status: TextView
+    private var cameraProvider: ProcessCameraProvider? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
 
-        val layout = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER
-            setPadding(32, 32, 32, 32)
-        }
+        previewView = findViewById(R.id.cameraPreview)
+        status = findViewById(R.id.cameraStatus)
 
-        val title = TextView(this).apply {
-            text = "XORUS AGENT"
-            textSize = 28f
-            gravity = Gravity.CENTER
-        }
-
-        status = TextView(this).apply {
-            text = "Perangkat siap"
-            textSize = 16f
-            gravity = Gravity.CENTER
-        }
-
-        val cameraButton = Button(this).apply {
-            text = "Minta Izin Kamera"
-            setOnClickListener {
-                if (checkSelfPermission(Manifest.permission.CAMERA)
-                    != PackageManager.PERMISSION_GRANTED) {
-                    requestPermissions(
-                        arrayOf(Manifest.permission.CAMERA), 100
-                    )
-                } else {
-                    status.text = "Izin kamera sudah diberikan"
-                }
+        findViewById<Button>(R.id.startCamera).setOnClickListener {
+            if (checkSelfPermission(Manifest.permission.CAMERA)
+                == PackageManager.PERMISSION_GRANTED) {
+                startCamera()
+            } else {
+                requestPermissions(
+                    arrayOf(Manifest.permission.CAMERA), 100
+                )
             }
         }
 
-        val screenButton = Button(this).apply {
-            text = "Screen Sharing"
-            setOnClickListener {
-                status.text =
-                    "Berbagi layar memerlukan persetujuan sistem Android setiap sesi."
-            }
+        findViewById<Button>(R.id.stopCamera).setOnClickListener {
+            stopCamera()
         }
+    }
 
-        layout.addView(title)
-        layout.addView(status)
-        layout.addView(cameraButton)
-        layout.addView(screenButton)
+    private fun startCamera() {
+        status.text = "Menyiapkan kamera..."
 
-        setContentView(layout)
+        val future = ProcessCameraProvider.getInstance(this)
+
+        future.addListener({
+            try {
+                cameraProvider = future.get()
+
+                val preview = Preview.Builder().build()
+                preview.setSurfaceProvider(previewView.surfaceProvider)
+
+                cameraProvider?.unbindAll()
+                cameraProvider?.bindToLifecycle(
+                    this,
+                    CameraSelector.DEFAULT_BACK_CAMERA,
+                    preview
+                )
+
+                status.text = "Kamera aktif"
+            } catch (e: Exception) {
+                status.text = "Gagal membuka kamera"
+            }
+        }, ContextCompat.getMainExecutor(this))
+    }
+
+    private fun stopCamera() {
+        cameraProvider?.unbindAll()
+        status.text = "Kamera dimatikan"
     }
 
     override fun onRequestPermissionsResult(
@@ -74,14 +82,17 @@ class MainActivity : Activity() {
         )
 
         if (requestCode == 100) {
-            status.text = if (
-                grantResults.isNotEmpty() &&
-                grantResults[0] == PackageManager.PERMISSION_GRANTED
-            ) {
-                "Izin kamera diberikan"
+            if (grantResults.isNotEmpty() &&
+                grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                startCamera()
             } else {
-                "Izin kamera ditolak"
+                status.text = "Izin kamera ditolak"
             }
         }
+    }
+
+    override fun onDestroy() {
+        stopCamera()
+        super.onDestroy()
     }
 }
